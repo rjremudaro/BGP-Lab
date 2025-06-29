@@ -1,0 +1,93 @@
+CSR-CE12#show run
+!
+hostname CSR-CE12
+!
+no ip domain lookup
+!
+crypto isakmp policy 10
+ encryption aes
+ authentication pre-share
+ group 2
+crypto isakmp key MYKEY address 20.34.14.2
+!
+crypto ipsec transform-set TS-GRE esp-aes esp-sha-hmac
+ mode transport
+!
+crypto map CMAP-GRE 10 ipsec-isakmp
+ set peer 20.34.14.2
+ set transform-set TS-GRE
+ match address GRE-TRAFFIC
+!
+interface Loopback0
+ ip address 12.12.12.12 255.255.255.255
+ ip ospf 1 area 0
+!
+interface Loopback1
+ ip address 50.50.50.50 255.255.255.255
+!
+interface Tunnel5060
+ ip address 50.60.0.254 255.255.255.254
+ tunnel source Loopback1
+ tunnel destination 60.60.60.60
+!
+interface GigabitEthernet1
+ ip address 10.22.12.2 255.255.255.252
+ crypto map CMAP-GRE
+!
+interface GigabitEthernet2
+ ip address 50.0.0.2 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+!
+interface GigabitEthernet3
+ ip address 50.0.0.9 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+!
+router ospf 1
+ redistribute bgp 50 route-map BGP-2-OSPF-RM
+!
+router bgp 50
+ network 15.15.15.15 mask 255.255.255.255
+ network 50.50.50.50 mask 255.255.255.255
+ neighbor 10.22.12.1 remote-as 10
+ neighbor 10.22.12.1 soft-reconfiguration inbound
+ neighbor 10.22.12.1 route-map CE14-LOOPBACK-1-WAN-IP-RM in
+ neighbor 10.22.12.1 route-map CE12-LOOPBACK-1-ONLY-RM out
+ neighbor 11.11.11.11 remote-as 50
+ neighbor 11.11.11.11 update-source Loopback0
+ neighbor 11.11.11.11 next-hop-self
+ neighbor 11.11.11.11 soft-reconfiguration inbound
+ neighbor 50.60.0.255 remote-as 60
+ neighbor 50.60.0.255 soft-reconfiguration inbound
+ neighbor 50.60.0.255 route-map INTERNAL-2-TUNNEL-RM out
+!
+ip access-list extended GRE-TRAFFIC
+ 10 permit gre host 50.50.50.50 host 60.60.60.60
+!
+ip prefix-list CE12-LOOPBACK-1-ONLY-PL seq 5 permit 50.50.50.50/32
+!
+ip prefix-list CE14-LOOPBACK-1-WAN-IP-PL seq 5 permit 60.60.60.60/32
+ip prefix-list CE14-LOOPBACK-1-WAN-IP-PL seq 10 permit 20.34.14.0/30
+!
+ip prefix-list FROM-AS60-PL seq 5 permit 16.16.16.16/32
+!
+ip prefix-list INTERNAL-2-TUNNEL-PL seq 5 permit 15.15.15.15/32
+!
+route-map INTERNAL-2-TUNNEL-RM permit 10
+ match ip address prefix-list INTERNAL-2-TUNNEL-PL
+ set as-path prepend 50 50 50
+!
+route-map CE12-LOOPBACK-1-ONLY-RM permit 10
+ match ip address prefix-list CE12-LOOPBACK-1-ONLY-PL
+!
+route-map CE14-LOOPBACK-1-WAN-IP-RM permit 10
+ match ip address prefix-list CE14-LOOPBACK-1-WAN-IP-PL
+!
+route-map BGP-2-OSPF-RM permit 10
+ match ip address prefix-list FROM-AS60-PL
+!
+line con 0
+ logging synchronous
+!
+end

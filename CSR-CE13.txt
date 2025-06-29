@@ -1,0 +1,50 @@
+CSR-CE13#show run
+!
+hostname CSR-CE13
+!
+no ip domain lookup
+!
+interface Loopback0
+ ip address 13.13.13.13 255.255.255.255
+ ip ospf 1 area 0
+!
+interface GigabitEthernet1
+ ip address 100.7.13.2 255.255.255.252
+!
+interface GigabitEthernet2
+ ip address 60.0.0.1 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+!
+interface GigabitEthernet3
+ ip address 60.0.0.5 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+!
+router ospf 1
+ redistribute bgp 60 route-map BGP-2-OSPF-RM
+!
+router bgp 60
+ network 16.16.16.16 mask 255.255.255.255
+ neighbor 14.14.14.14 remote-as 60
+ neighbor 14.14.14.14 update-source Loopback0
+ neighbor 14.14.14.14 next-hop-self
+ neighbor 14.14.14.14 soft-reconfiguration inbound
+ neighbor 100.7.13.1 remote-as 100
+ neighbor 100.7.13.1 soft-reconfiguration inbound
+ neighbor 100.7.13.1 route-map INTERNAL-2-MPLS-PROVIDER-RM out
+!
+ip prefix-list FROM-AS50-PL seq 5 permit 15.15.15.15/32
+!
+ip prefix-list INTERNAL-2-MPLS-PROVIDER-PL seq 5 permit 16.16.16.16/32
+!
+route-map INTERNAL-2-MPLS-PROVIDER-RM permit 10
+ match ip address prefix-list INTERNAL-2-MPLS-PROVIDER-PL
+!
+route-map BGP-2-OSPF-RM permit 10
+ match ip address prefix-list FROM-AS50-PL
+!
+line con 0
+ logging synchronous
+!
+end

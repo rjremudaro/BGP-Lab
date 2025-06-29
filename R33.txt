@@ -1,0 +1,38 @@
+R33#show run
+!
+hostname R33
+!
+interface Loopback0
+ ip address 33.33.33.33 255.255.255.255
+ ip ospf 1 area 0
+!
+interface Loopback1
+ ip address 33.34.1.1 255.255.255.0
+!
+interface Loopback100
+ ip address 33.34.100.1 255.255.255.0
+!
+interface GigabitEthernet0/0
+ ip address 20.2.1.1 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+!
+interface GigabitEthernet0/7
+ ip address 10.20.0.2 255.255.255.252
+!
+router ospf 1
+!
+router bgp 20
+ network 33.34.1.0 mask 255.255.255.0
+ network 33.34.100.0 mask 255.255.255.0
+ aggregate-address 33.34.0.0 255.255.0.0 summary-only
+ neighbor 10.20.0.1 remote-as 10
+ neighbor 10.20.0.1 soft-reconfiguration inbound
+ neighbor 34.34.34.34 remote-as 20
+ neighbor 34.34.34.34 update-source Loopback0
+ neighbor 34.34.34.34 next-hop-self
+ neighbor 34.34.34.34 soft-reconfiguration inbound
+!
+line con 0
+!
+end

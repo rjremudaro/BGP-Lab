@@ -1,0 +1,68 @@
+R7-PE2#show run
+!
+hostname R7-PE2
+!
+vrf definition A
+ rd 7.7.7.7:1
+ !
+ address-family ipv4
+  route-target export 7.7.7.7:1
+  route-target import 1.1.1.1:1
+ exit-address-family
+!
+no ip domain lookup
+!
+mpls label range 700 799
+!
+interface Loopback0
+ ip address 7.7.7.7 255.255.255.255
+ ip ospf 1 area 0
+!
+interface GigabitEthernet0/0
+ ip address 100.0.0.30 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+ mpls ip
+!
+interface GigabitEthernet0/1
+ ip address 100.0.0.34 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+ mpls ip
+!
+interface GigabitEthernet0/7
+ vrf forwarding A
+ ip address 100.7.13.1 255.255.255.252
+!
+router ospf 1
+!
+router bgp 100
+ no bgp default ipv4-unicast
+ neighbor 1.1.1.1 remote-as 100
+ neighbor 1.1.1.1 update-source Loopback0
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family vpnv4
+  neighbor 1.1.1.1 activate
+  neighbor 1.1.1.1 send-community extended
+  neighbor 1.1.1.1 next-hop-self
+ exit-address-family
+ !
+ address-family ipv4 vrf A
+  neighbor 100.7.13.2 remote-as 60
+  neighbor 100.7.13.2 activate
+  neighbor 100.7.13.2 soft-reconfiguration inbound
+  neighbor 100.7.13.2 route-map CUST-SITE-B-RM in
+ exit-address-family
+!
+ip prefix-list CUST-SITE-B-PL seq 5 permit 16.16.16.16/32
+!
+route-map CUST-SITE-B-RM permit 10
+ match ip address prefix-list CUST-SITE-B-PL
+!
+line con 0
+ logging synchronous
+!
+end

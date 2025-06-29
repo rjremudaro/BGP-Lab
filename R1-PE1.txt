@@ -1,0 +1,67 @@
+R1-PE1#show run
+!
+hostname R1-PE1
+!
+vrf definition A
+ rd 1.1.1.1:1
+ !
+ address-family ipv4
+  route-target export 1.1.1.1:1
+  route-target import 7.7.7.7:1
+ exit-address-family
+!
+no ip domain lookup
+!
+mpls label range 100 199
+!
+interface Loopback0
+ ip address 1.1.1.1 255.255.255.255
+ ip ospf 1 area 0
+!
+interface GigabitEthernet0/0
+ ip address 100.0.0.1 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+ mpls ip
+!
+interface GigabitEthernet0/1
+ ip address 100.0.0.5 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+ mpls ip
+!
+interface GigabitEthernet0/7
+ vrf forwarding A
+ ip address 100.1.11.1 255.255.255.252
+!
+router ospf 1
+!
+router bgp 100
+ no bgp default ipv4-unicast
+ neighbor 7.7.7.7 remote-as 100
+ neighbor 7.7.7.7 update-source Loopback0
+ !
+ address-family ipv4
+ exit-address-family
+ !
+ address-family vpnv4
+  neighbor 7.7.7.7 activate
+  neighbor 7.7.7.7 send-community extended
+  neighbor 7.7.7.7 next-hop-self
+ exit-address-family
+ !
+ address-family ipv4 vrf A
+  neighbor 100.1.11.2 remote-as 50
+  neighbor 100.1.11.2 activate
+  neighbor 100.1.11.2 soft-reconfiguration inbound
+  neighbor 100.1.11.2 route-map CUST-SITE-A-RM in
+ exit-address-family
+!
+ip prefix-list CUST-SITE-A-PL seq 5 permit 15.15.15.15/32
+!
+route-map CUST-SITE-A-RM permit 10
+ match ip address prefix-list CUST-SITE-A-PL
+!
+line con 0
+!
+end

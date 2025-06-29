@@ -1,0 +1,33 @@
+R22#show run
+!
+hostname R22
+!
+no ip domain lookup
+!
+interface Loopback0
+ ip address 22.22.22.22 255.255.255.255
+ ip ospf 1 area 0
+!
+interface GigabitEthernet0/0
+ ip address 10.2.1.1 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+!
+interface GigabitEthernet0/7
+ ip address 10.22.12.1 255.255.255.252
+!
+router ospf 1
+!
+router bgp 10
+ network 10.22.12.0 mask 255.255.255.252
+ neighbor 10.22.12.2 remote-as 50
+ neighbor 10.22.12.2 soft-reconfiguration inbound
+ neighbor 23.23.23.23 remote-as 10
+ neighbor 23.23.23.23 update-source Loopback0
+ neighbor 23.23.23.23 next-hop-self
+ neighbor 23.23.23.23 soft-reconfiguration inbound
+!
+line con 0
+ logging synchronous
+!
+end

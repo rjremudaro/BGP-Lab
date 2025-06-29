@@ -1,0 +1,33 @@
+R34#show run
+!
+hostname R34
+!
+no ip domain lookup
+!
+interface Loopback0
+ ip address 34.34.34.34 255.255.255.255
+ ip ospf 1 area 0
+!
+interface GigabitEthernet0/0
+ ip address 20.2.1.2 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+!
+interface GigabitEthernet0/7
+ ip address 20.34.14.1 255.255.255.252
+!
+router ospf 1
+!
+router bgp 20
+ network 20.34.14.0 mask 255.255.255.252
+ neighbor 20.34.14.2 remote-as 60
+ neighbor 20.34.14.2 soft-reconfiguration inbound
+ neighbor 33.33.33.33 remote-as 20
+ neighbor 33.33.33.33 update-source Loopback0
+ neighbor 33.33.33.33 next-hop-self
+ neighbor 33.33.33.33 soft-reconfiguration inbound
+!
+line con 0
+ logging synchronous
+!
+end

@@ -1,0 +1,36 @@
+R6-P#show run
+!
+hostname R6-P
+!
+no ip domain lookup
+!
+mpls label range 600 699
+!
+interface Loopback0
+ ip address 6.6.6.6 255.255.255.255
+ ip ospf 1 area 0
+!
+interface GigabitEthernet0/0
+ ip address 100.0.0.18 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+ mpls ip
+!
+interface GigabitEthernet0/1
+ ip address 100.0.0.26 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+ mpls ip
+!
+interface GigabitEthernet0/2
+ ip address 100.0.0.33 255.255.255.252
+ ip ospf network point-to-point
+ ip ospf 1 area 0
+ mpls ip
+!
+router ospf 1
+!
+line con 0
+ logging synchronous
+!
+end
