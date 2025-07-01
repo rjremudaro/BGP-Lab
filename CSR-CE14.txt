@@ -43,9 +43,11 @@ interface GigabitEthernet3
  ip ospf 1 area 0
 !
 router ospf 1
+ router-id 14.14.14.14
  redistribute bgp 60 route-map BGP-2-OSPF-RM
 !
 router bgp 60
+ bgp router-id 14.14.14.14
  network 16.16.16.16 mask 255.255.255.255
  network 60.60.60.60 mask 255.255.255.255
  neighbor 13.13.13.13 remote-as 60
